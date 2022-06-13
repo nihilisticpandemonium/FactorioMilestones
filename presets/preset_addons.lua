@@ -267,7 +267,7 @@ preset_addons = {
             {type="item", name="zirconium-plate", quantity=1},
         }
     },
-    ["leighzeruraniuminnovations"] = {
+    ["Leighzer's Uranium Innovations"] = {
         required_mods = {"leighzeruraniuminnovations"},
         milestones = {
             {type="group", name="Science"},
