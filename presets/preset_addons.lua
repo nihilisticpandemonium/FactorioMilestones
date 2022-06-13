@@ -258,4 +258,19 @@ preset_addons = {
             {type="item", name="nuclear-science-pack", quantity=1000, next="x10"}
         }
     },
+    ["Infused Science"] = {
+        required_mods = {"infused-science"},
+        milestones = {
+            {type = "group", name = "Science"}
+        },
+        build_func = function(preset)
+            local infusedScienceMilestones = preset.milestones
+            if global.infused_sciencePacks then
+                for _, science in pairs(global.infused_sciencePacks) do
+                    table.insert(infusedScienceMilestones, {type="item", name=science, quantity=1})
+                    table.insert(infusedScienceMilestones, {type="item", name=science, quantity=1000, next="x10"})
+                end
+            end
+        end
+    }
 }
