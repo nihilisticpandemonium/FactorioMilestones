@@ -13,7 +13,7 @@ function initialize_force_if_needed(force)
         for i, loaded_milestone in pairs(global.loaded_milestones) do
             if loaded_milestone.type == "group" then
                 current_group = loaded_milestone.name
-            else
+            elseif loaded_milestone.type ~= "alias" then
                 local inserted_milestone = table.deep_copy(loaded_milestone)
                 inserted_milestone.sort_index = i
                 inserted_milestone.group = current_group
@@ -38,7 +38,7 @@ function reinitialize_player(player_index)
 end
 
 function initialize_player(player)
-    local outer_frame, main_frame, inner_frame = build_main_frame(player)
+    local outer_frame, main_frame, inner_frame = build_gui_frames(player)
     global.players[player.index] = {
         outer_frame = outer_frame,
         main_frame = main_frame,

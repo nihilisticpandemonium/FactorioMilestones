@@ -46,7 +46,7 @@ function merge_new_milestones(force_name, new_loaded_milestones)
     for i, new_loaded_milestone in pairs(new_loaded_milestones) do
         if new_loaded_milestone.type == "group" then
             current_group = new_loaded_milestone.name
-        else
+        elseif new_loaded_milestone.type ~= "alias" then
             local new_milestone = table.deep_copy(new_loaded_milestone)
             new_milestone.sort_index = i
             new_milestone.group = current_group
@@ -78,6 +78,16 @@ function merge_new_milestones(force_name, new_loaded_milestones)
     global_force.complete_milestones = new_complete
     global_force.incomplete_milestones = new_incomplete
     global_force.milestones_by_group = new_milestones_by_group
+end
+
+function initialize_alias_table()
+    global.production_aliases = {}
+    for _, loaded_milestone in pairs(global.loaded_milestones) do
+        if loaded_milestone.type == "alias" then
+            global.production_aliases[loaded_milestone.equals] = {} or global.production_aliases[loaded_milestone.equals]
+            table.insert(global.production_aliases[loaded_milestone.equals], {name=loaded_milestone.name, quantity=loaded_milestone.quantity})
+        end
+    end
 end
 
 function mark_milestone_reached(force, milestone, tick, milestone_index, lower_bound_tick) -- lower_bound_tick is optional
@@ -212,20 +222,18 @@ local function find_production_tick_bounds(milestone, stats)
     local lower_bound_ticks_ago, upper_bound_ticks_ago
     if precision_bracket == "ALL" then
         -- Completion time is over 1000 hours ago, there are no samples to go through
-        return lower_bound_real_time, upper_bound_real_time
+        -- All we know is it's between tick 0 and 1000 hours ago
+        lower_bound_ticks_ago, upper_bound_ticks_ago = game.tick, FLOW_PRECISION_BRACKETS_LENGTHS[defines.flow_precision_index.one_thousand_hours]
+    else
+        local sample_index = find_sample_in_precision_bracket(milestone, precision_bracket, stats)
+        if sample_index == 0 then
+            return game.tick, game.tick -- Created this exact tick, usually on tick 0 before the start of the game
+        end
+        lower_bound_ticks_ago, upper_bound_ticks_ago = get_tick_bounds_from_sample(precision_bracket, sample_index)
     end
-    local sample_index = find_sample_in_precision_bracket(milestone, precision_bracket, stats)
-    log("sample_index: " ..sample_index)
-    if sample_index == 0 then
-        return game.tick, game.tick -- Created this exact tick, usually on tick 0 before the start of the game
-    end
-    lower_bound_ticks_ago, upper_bound_ticks_ago = get_tick_bounds_from_sample(precision_bracket, sample_index)
-    log("lower_bound_ticks_ago: " ..lower_bound_ticks_ago.. " - upper_bound_ticks_ago: " ..upper_bound_ticks_ago)
 
     lower_bound_real_time, upper_bound_real_time = get_realtime_tick_bounds(lower_bound_ticks_ago, upper_bound_ticks_ago, precision_bracket)
-    log("lower_bound_real_time: " ..lower_bound_real_time.. " - upper_bound_real_time: " ..upper_bound_real_time)
 
-    -- TODO: do some rounding to the nearest second/minute/10minutes based on precision?
     return lower_bound_real_time, upper_bound_real_time
 end
 
@@ -267,7 +275,7 @@ function backfill_completion_times(force)
     local i = 1
     while i <= #global_force.incomplete_milestones do
         local milestone = global_force.incomplete_milestones[i]
-        if is_milestone_reached(milestone, item_counts, fluid_counts, kill_counts, technologies) then
+        if is_valid_milestone(milestone) and is_milestone_reached(milestone, item_counts, fluid_counts, kill_counts, technologies) then
             local lower_bound, upper_bound = find_completion_tick_bounds(milestone, item_stats, fluid_stats, kill_stats)
             log("Tick bounds for " ..milestone.name.. " : " ..lower_bound.. " - " ..upper_bound)
             if milestone.next then
@@ -301,6 +309,18 @@ function is_production_milestone_reached(milestone, item_counts, fluid_counts, k
     end
 
     local milestone_count = type_count[milestone.name]
+
+    -- Aliases
+    if global.production_aliases[milestone.name] then
+        for _, alias in pairs(global.production_aliases[milestone.name]) do
+            local alias_count = type_count[alias.name]
+            if alias_count then
+                milestone_count = milestone_count or 0 -- Could be nil
+                milestone_count = milestone_count + alias_count * alias.quantity
+            end
+        end
+    end
+
     if milestone_count ~= nil and milestone_count >= milestone.quantity then
         return true
     end
@@ -311,7 +331,8 @@ function is_tech_milestone_reached(milestone, technology)
     if milestone.type == "technology" and
        technology.name == milestone.name and
        -- strict > because the level we get is the current researchable level, not the researched level
-       (technology.researched or technology.level > milestone.quantity) then
+       -- if technology.level == technology.prototype.level then this is just a non-repeating tech with a number at the end e.g. 'Electronics 3'
+       (technology.researched or (technology.level > milestone.quantity and technology.level > technology.prototype.level)) then
         return true
     end
     return false
@@ -324,4 +345,20 @@ function is_milestone_reached(milestone, item_counts, fluid_counts, kill_counts,
     else
         return is_production_milestone_reached(milestone, item_counts, fluid_counts, kill_counts)
     end
+end
+
+function is_valid_milestone(milestone)
+    local prototype
+    if milestone.type == "item" then
+        prototype = game.item_prototypes[milestone.name]
+    elseif milestone.type == "fluid" then
+        prototype = game.fluid_prototypes[milestone.name]
+    elseif milestone.type == "technology" then
+        prototype = game.technology_prototypes[milestone.name]
+    elseif milestone.type == "kill" then
+        prototype = game.entity_prototypes[milestone.name]
+    else
+        return false
+    end
+    return prototype ~= nil
 end

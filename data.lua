@@ -1,15 +1,17 @@
 local data_util = require("__flib__.data-util")
 local styles = data.raw["gui-style"].default
 
-styles.milestones_inner_frame = {
-    type = "frame_style",
-    parent = "inside_shallow_frame_with_padding",
-    vertically_stretchable = "on",
-    vertical_flow_style = {
-      type = "vertical_flow_style",
-      horizontal_align = "center",
-      vertical_spacing = 8,
-    }
+styles.milestones_settings_outer_flow = {
+    type = "vertical_flow_style",
+    horizontal_align = "center",
+    vertical_spacing = 8,
+    padding = 15
+}
+
+styles.milestones_settings_scroll = {
+  type = "scroll_pane_style",
+  parent = "flib_naked_scroll_pane",
+  padding = 0
 }
 
 styles.milestones_deep_frame_in_shallow_frame = {
@@ -28,16 +30,23 @@ styles.milestones_horizontal_flow_center = {
   vertical_align = "center",
 }
 
-styles.milestones_horizontal_flow_big = {
+styles.milestones_horizontal_flow_big_settings = {
   type = "horizontal_flow_style",
   parent = "milestones_horizontal_flow_center",
   minimal_width = 150,
-  horizontal_spacing = 8
+  horizontal_spacing = 8,
+}
+
+styles.milestones_horizontal_flow_big_display = {
+  type = "horizontal_flow_style",
+  parent = "milestones_horizontal_flow_big_settings",
+  left_padding = 16,
+  right_padding = 16
 }
 
 styles.milestones_table_style = {
   type = "table_style",
-  horizontal_spacing = 32
+  horizontal_spacing = 0
 }
 
 styles.milestones_small_button = {
@@ -58,14 +67,6 @@ styles.milestones_grey_button = {
 styles.milestones_selected_grey_button = {
   type = "button_style",
   parent = "flib_selected_tool_button",
-  width = 24,
-  height = 24,
-  padding = 0
-}
-
-styles.milestones_trash_button = {
-  type = "button_style",
-  parent = "tool_button_red",
   width = 24,
   height = 24,
   padding = 0
@@ -111,6 +112,17 @@ styles.milestones_very_short_spacer = {
   type = "empty_widget_style",
   width = 40
 }
+
+styles.milestones_line_left = table.deepcopy(styles.line)
+styles.milestones_line_left.border.right_end = styles.line.border.horizontal_line
+
+styles.milestones_line_right = table.deepcopy(styles.line)
+styles.milestones_line_right.border.left_end = styles.line.border.horizontal_line
+
+styles.milestones_line_center = table.deepcopy(styles.line)
+styles.milestones_line_center.border.right_end = styles.line.border.horizontal_line
+styles.milestones_line_center.border.left_end = styles.line.border.horizontal_line
+
 
 data:extend{
     {

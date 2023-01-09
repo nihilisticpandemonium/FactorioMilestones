@@ -104,13 +104,28 @@ return {
             local fluid_stats = force.fluid_production_statistics
             local kill_stats = force.kill_count_statistics
             for _, milestone in pairs(global_force.complete_milestones) do
-                if milestone.lower_bound_tick ~= nil then
+                if is_valid_milestone(milestone) and milestone.lower_bound_tick ~= nil then
                     local new_lower_bound, new_upper_bound = find_completion_tick_bounds(milestone, item_stats, fluid_stats, kill_stats)
                     log("Old tick bounds for " ..milestone.name.. " : " ..milestone.lower_bound_tick.. " - " ..milestone.completion_tick)
                     log("New tick bounds for " ..milestone.name.. " : " ..new_lower_bound.. " - " ..new_upper_bound)
                     milestone.lower_bound_tick = math.max(milestone.lower_bound_tick, new_lower_bound)
                     milestone.completion_tick = math.min(milestone.completion_tick, new_upper_bound)
                 end
+            end
+        end
+    end,
+
+    ["1.3.8"] = function()
+        log("Running 1.3.8 migration")
+        initialize_alias_table()
+    end,
+
+    ["1.3.10"] = function()
+        log("Running 1.3.10 migration")
+        -- inner frame GUI changes, we must recreate GUIs
+        for _, player in pairs(game.players) do
+            if global.players[player.index] then
+                reinitialize_player(player.index)
             end
         end
     end,

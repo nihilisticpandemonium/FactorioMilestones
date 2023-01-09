@@ -18,10 +18,10 @@ script.on_init(function()
 
     initial_preset_string = settings.global["milestones_initial_preset"].value
     if initial_preset_string ~= "" then
-        initial_preset, error = convert_and_validate_imported_json(initial_preset_string)
+        initial_preset, err = convert_and_validate_imported_json(initial_preset_string)
         if initial_preset == nil then
             table.insert(global.delayed_chat_messages, {"milestones.message_invalid_initial_preset"})
-            table.insert(global.delayed_chat_messages, error)
+            table.insert(global.delayed_chat_messages, err)
         else
             global.current_preset_name = "Imported"
             global.loaded_milestones = initial_preset
@@ -33,6 +33,7 @@ script.on_init(function()
     if initial_preset == nil then
         load_preset_addons()
     end
+    initialize_alias_table()
 
     -- Initialize for existing forces in existing save file
     local backfilled_anything = false
@@ -89,10 +90,13 @@ end)
 script.on_nth_tick(settings.global["milestones_check_frequency"].value, track_item_creation)
 
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-    if event.setting == "milestones_check_frequency" then
+    local setting_name = event.setting
+    if setting_name == "milestones_check_frequency" then
         log("Milestones check frequency changed")
         script.on_nth_tick(nil) -- Unregister event
         script.on_nth_tick(settings.global["milestones_check_frequency"].value, track_item_creation)
+    elseif setting_name == "milestones_compact_list" or setting_name == "milestones_list_by_group" or setting_name == "milestones_show_estimations" then
+        refresh_gui_for_player(game.get_player(event.player_index))
     end
 end)
 

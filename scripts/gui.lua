@@ -22,9 +22,9 @@ function get_inner_frame(player_index)
     return get_frame(player_index, "inner_frame")
 end
 
-function build_main_frame(player)
+function build_gui_frames(player)
     local screen_element = player.gui.screen
-    local outer_frame = screen_element.add{type="frame", style="outer_frame", visible=false}
+    local outer_frame = screen_element.add{type="frame", name="milestones_outer_frame", style="outer_frame", visible=false}
     local main_frame = outer_frame.add{type="frame", name="milestones_main_frame", direction="vertical"}
 
     local titlebar = main_frame.add{type="flow", name="milestones_titlebar", style="flib_titlebar_flow", direction="horizontal"}
@@ -84,7 +84,7 @@ function build_main_frame(player)
     }
     titlebar.drag_target = outer_frame
 
-    local inner_frame = main_frame.add{type="frame", name="milestones_inner_frame", direction="vertical", style="milestones_inner_frame"}
+    local inner_frame = main_frame.add{type="frame", name="milestones_inner_frame", direction="vertical", style="inside_shallow_frame"}
 
     local dialog_buttons_bar = main_frame.add{type="flow", style="dialog_buttons_horizontal_flow", name="milestones_dialog_buttons", direction="horizontal"}
     dialog_buttons_bar.add{type="button", style="back_button", caption={"milestones.settings_back"}, tags={action="milestones_cancel_settings"}}
@@ -135,6 +135,7 @@ local function open_gui(player)
     build_display_page(player)
     update_settings_button(player)
     outer_frame.visible = true
+    outer_frame.bring_to_front()
     player.opened = get_main_frame(player.index)
     player.set_shortcut_toggled("milestones_toggle_gui", true)
 
@@ -145,9 +146,9 @@ local function open_gui(player)
 end
 
 local function close_gui(player)
-    local global_player = global.players[player.index]
     local outer_frame = get_outer_frame(player.index)
     outer_frame.visible = false
+    outer_frame.auto_center = false -- Remove auto_center from the force_auto_center() that we did for the first open
     get_inner_frame(player.index).clear()
 
     local import_export_frame = outer_frame.milestones_settings_import_export
@@ -216,6 +217,16 @@ script.on_event(defines.events.on_gui_closed, function(event)
     end
 end)
 
+script.on_event(defines.events.on_player_display_resolution_changed, function(event)
+    local player = game.players[event.player_index]
+    refresh_gui_for_player(player)
+end)
+
+script.on_event(defines.events.on_player_display_scale_changed, function(event)
+    local player = game.players[event.player_index]
+    refresh_gui_for_player(player)
+end)
+
 -- Quickbar shortcut
 script.on_event(defines.events.on_lua_shortcut, function(event)
     if event.prototype_name == "milestones_toggle_gui" then
@@ -264,9 +275,9 @@ script.on_event(defines.events.on_gui_click, function(event)
     elseif event.element.tags.action == "milestones_confirm_settings" then
         confirm_settings_page(event.player_index)
     elseif event.element.tags.action == "milestones_swap_setting" then
-        swap_settings(event.player_index, event.element)
-    elseif event.element.tags.action == "milestones_delete_setting" then
-        delete_setting(event.player_index, event.element)
+        swap_settings(event.player_index, event)
+    elseif event.element.tags.action == "milestones_delete_settings" then
+        delete_selected_settings(event.player_index)
     elseif event.element.tags.action == "milestones_add_setting" then
         add_setting(event.player_index, event.element)
     elseif event.element.tags.action == "milestones_edit_time" then
@@ -283,6 +294,8 @@ script.on_event(defines.events.on_gui_click, function(event)
         import_settings(event.player_index)
     elseif event.element.tags.action == "milestones_settings_infinity_button" then
         toggle_infinity_button(event.element)
+    elseif event.element.tags.action == "milestones_select_setting" then -- have to use on_gui_click instead of on_gui_checked_state_changed so we can check for shift
+        select_setting(event)
     end
 end)
 

@@ -132,6 +132,18 @@ preset_addons = {
             {type="kill", name="bob-titan-biter",     quantity=1},
             {type="kill", name="bob-behemoth-biter",  quantity=1},
             {type="kill", name="bob-leviathan-biter", quantity=1},
+            {type="kill", name="bob-leviathan-biter", quantity=100, next="x10"},
+        }
+    },
+
+    ["Bob's Modules"] = {
+        required_mods = {"bobenemies"},
+        forbidden_mods = {"SeaBlock"},
+        milestones = {
+            {type="group", name="Progress"},
+            {type="kill", name="speed-module-8", quantity=1},
+            {type="kill", name="effectivity-module-8", quantity=1},
+            {type="kill", name="productivity-module-8", quantity=1},
         }
     },
 
@@ -219,8 +231,10 @@ preset_addons = {
         milestones = {
             {type="group", name="Resources", quantity=1},
             {type="item", name="aluminum-plate", quantity=1},
+            {type="item", name="copper-plate", quantity=1}, -- pushed further into the tech tree
         }
     },
+
     ["BZ Graphite & Diamonds"] = {
         required_mods = {"bzcarbon"},
         milestones = {
@@ -229,6 +243,7 @@ preset_addons = {
           {type = "item", name = "diamond", quantity = 1},
       }
     },
+
     ["BZ Lead"] = {
         required_mods = {"bzlead"},
         milestones = {
@@ -239,11 +254,22 @@ preset_addons = {
 
     ["BZ Silicon"] = {
         required_mods = {"bzsilicon"},
+        forbidden_mods = {"Krastorio2"},
+        milestones = {
+            {type="group", name="Resources", quantity=1},
+            {type="item", name="silica", quantity=1},
+            {type="item", name="silicon", quantity=1},
+        }
+    },
+
+    ["BZ Silicon (with K2)"] = { -- K2 removes BZ's silicon
+        required_mods = {"bzsilicon", "Krastorio2"},
         milestones = {
             {type="group", name="Resources", quantity=1},
             {type="item", name="silica", quantity=1},
         }
     },
+
     ["BZ Titanium"] = {
         required_mods = {"bztitanium"},
         milestones = {
@@ -267,12 +293,48 @@ preset_addons = {
             {type="item", name="zirconium-plate", quantity=1},
         }
     },
+
     ["Leighzer's Uranium Innovations"] = {
         required_mods = {"leighzeruraniuminnovations"},
         milestones = {
             {type="group", name="Science"},
             {type="item", name="nuclear-science-pack", quantity=1},
             {type="item", name="nuclear-science-pack", quantity=1000, next="x10"},
+        }
+    },
+
+    ["Brass Tacks"] = {
+        required_mods = {"BrassTacks"},
+        milestones = {
+            {type="group", name="Resources"},
+            {type="item", name="zinc-plate", quantity=1},
+            {type="item", name="brass-plate", quantity=1},
+        }
+    },
+
+    ["If I Had A Nickel "] = {
+        required_mods = {"IfNickel"},
+        milestones = {
+            {type="group", name="Resources"},
+            {type="item", name="nickel-plate", quantity=1},
+            {type="item", name="invar-plate", quantity=1},
+        }
+    },
+
+    ["Fluidic Power"] = {
+        required_mods = {"FluidicPower"},
+        milestones = {
+            {type="group", name="Fluidic Power"},
+            -- My stable 45spm generated 23TJ. Now runs at ~600MW.
+            {type="fluid", name="fluidic-10-kilojoules", quantity=(10e9) / (10e3), 
+                tooltip = {"", {"milestones.fluidic_power_tooltip", "10GJ"}}
+            }, -- Basically 10 steam engines running for two hours, meant to trigger early
+            {type="fluid", name="fluidic-10-kilojoules", quantity=(10e12) / (10e3), 
+                tooltip = {"", {"milestones.fluidic_power_tooltip", "10TJ"}}
+            },
+            {type="fluid", name="fluidic-10-kilojoules", quantity=(100e12) / (10e3), 
+                tooltip = {"", {"milestones.fluidic_power_tooltip", "100TJ"}}
+            },
         }
     },
 }
